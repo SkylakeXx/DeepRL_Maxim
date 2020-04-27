@@ -11,6 +11,8 @@ import torch.nn as nn
 import torch.optim as optim
 
 from tensorboardX import SummaryWriter
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 DEFAULT_ENV_NAME = "PongNoFrameskip-v4"
@@ -23,7 +25,7 @@ LEARNING_RATE = 1e-4
 SYNC_TARGET_FRAMES = 1000
 REPLAY_START_SIZE = 10000
 
-EPSILON_DECAY_LAST_FRAME = 10**5
+EPSILON_DECAY_LAST_FRAME = 10**6
 EPSILON_START = 1.0
 EPSILON_FINAL = 0.02
 
@@ -45,7 +47,7 @@ class ExperienceBuffer:
         indices = np.random.choice(len(self.buffer), batch_size, replace=False)
         states, actions, rewards, dones, next_states = zip(*[self.buffer[idx] for idx in indices])
         return np.array(states), np.array(actions), np.array(rewards, dtype=np.float32), \
-               np.array(dones, dtype=np.bool), np.array(next_states)
+               np.array(dones, dtype=np.uint8), np.array(next_states)
 
 
 class Agent:
@@ -140,7 +142,7 @@ if __name__ == "__main__":
             ts_frame = frame_idx
             ts = time.time()
             mean_reward = np.mean(total_rewards[-100:])
-            print("{}: done {} games, mean reward {}, eps {}, speed {} f/s".format(
+            print("%d: done %d games, mean reward %.3f, eps %.2f, speed %.2f f/s" % (
                 frame_idx, len(total_rewards), mean_reward, epsilon,
                 speed
             ))
@@ -151,7 +153,7 @@ if __name__ == "__main__":
             if best_mean_reward is None or best_mean_reward < mean_reward:
                 torch.save(net.state_dict(), args.env + "-best.dat")
                 if best_mean_reward is not None:
-                    print("Best mean reward updated {} -> {}, model saved".format(best_mean_reward, mean_reward))
+                    print("Best mean reward updated %.3f -> %.3f, model saved" % (best_mean_reward, mean_reward))
                 best_mean_reward = mean_reward
             if mean_reward > args.reward:
                 print("Solved in %d frames!" % frame_idx)
