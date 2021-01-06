@@ -29,3 +29,7 @@ if __name__ == "__main__":
         if done:
             break
     print("GOT REWARD OF: {}".format(total_reward))
+
+
+
+
